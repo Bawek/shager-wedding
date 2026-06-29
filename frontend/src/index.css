@@ -1,0 +1,231 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+:root {
+  /* Color System */
+  --bg-obsidian: hsl(220, 20%, 6%);
+  --bg-surface: hsl(220, 16%, 10%);
+  --bg-surface-elevated: hsl(220, 16%, 14%);
+  
+  --gold-primary: hsl(43, 74%, 55%);
+  --gold-hover: hsl(43, 80%, 45%);
+  --gold-light: hsl(43, 60%, 75%);
+  --gold-glow: rgba(212, 175, 55, 0.25);
+  
+  --text-primary: hsl(0, 0%, 96%);
+  --text-secondary: hsl(220, 10%, 70%);
+  --text-muted: hsl(220, 10%, 50%);
+  
+  --border-glass: rgba(212, 175, 55, 0.12);
+  --border-light: rgba(255, 255, 255, 0.08);
+  
+  --glass-bg: rgba(18, 20, 26, 0.7);
+  --glass-blur: blur(16px);
+  
+  /* Status Colors */
+  --status-pending: hsl(40, 90%, 50%);
+  --status-reviewed: hsl(200, 85%, 55%);
+  --status-assigned: hsl(150, 80%, 40%);
+  --status-progress: hsl(210, 90%, 50%);
+  --status-completed: hsl(120, 75%, 40%);
+  --status-rejected: hsl(0, 85%, 55%);
+  --status-escalated: hsl(330, 90%, 55%);
+
+  /* Styling variables */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Outfit', sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-obsidian);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(at 10% 20%, rgba(212, 175, 55, 0.03) 0px, transparent 50%),
+    radial-gradient(at 90% 80%, rgba(212, 175, 55, 0.02) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+/* Typography */
+h1, h2, h3, h4, .font-serif {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+a {
+  color: var(--gold-light);
+  text-decoration: none;
+  transition: var(--transition-smooth);
+}
+
+a:hover {
+  color: var(--gold-primary);
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: var(--transition-smooth);
+}
+
+.glass-panel-hover:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px 0 rgba(212, 175, 55, 0.08);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 22px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.95rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  gap: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold-primary), hsl(43, 74%, 42%));
+  color: hsl(220, 20%, 5%);
+  border: none;
+  box-shadow: 0 4px 14px var(--gold-glow);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, hsl(43, 74%, 42%), var(--gold-primary));
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+  transform: scale(1.02);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--gold-light);
+  border: 1px solid var(--gold-primary);
+}
+
+.btn-secondary:hover {
+  background: rgba(212, 175, 55, 0.08);
+  color: var(--text-primary);
+  border-color: var(--gold-light);
+}
+
+.btn-danger {
+  background: rgba(244, 67, 54, 0.15);
+  color: hsl(0, 85%, 70%);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.btn-danger:hover {
+  background: hsl(0, 85%, 55%);
+  color: white;
+  border-color: transparent;
+}
+
+/* Inputs & Form Fields */
+.form-group {
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.form-control {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  padding: 11px 16px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  outline: none;
+  transition: var(--transition-smooth);
+}
+
+.form-control:focus {
+  border-color: var(--gold-primary);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 2px var(--gold-glow);
+}
+
+/* Badge System */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badge-pending { background: rgba(230, 175, 46, 0.15); color: var(--status-pending); border: 1px solid rgba(230, 175, 46, 0.3); }
+.badge-reviewed { background: rgba(56, 173, 240, 0.15); color: var(--status-reviewed); border: 1px solid rgba(56, 173, 240, 0.3); }
+.badge-assigned { background: rgba(64, 204, 111, 0.15); color: var(--status-assigned); border: 1px solid rgba(64, 204, 111, 0.3); }
+.badge-in_progress { background: rgba(33, 150, 243, 0.15); color: var(--status-progress); border: 1px solid rgba(33, 150, 243, 0.3); }
+.badge-completed { background: rgba(76, 175, 80, 0.15); color: var(--status-completed); border: 1px solid rgba(76, 175, 80, 0.3); }
+.badge-rejected { background: rgba(244, 67, 54, 0.15); color: var(--status-rejected); border: 1px solid rgba(244, 67, 54, 0.3); }
+.badge-escalated { background: rgba(233, 30, 99, 0.15); color: var(--status-escalated); border: 1px solid rgba(233, 30, 99, 0.3); }
+
+/* Custom Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Grid Layouts */
+.grid-catalog {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+/* Utility Containers */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Luxury Dividers */
+.luxury-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+  margin: 2rem 0;
+  opacity: 0.3;
+}
