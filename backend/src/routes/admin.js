@@ -33,7 +33,7 @@ router.use(authorize('admin'));
 // User Management
 router.route('/users')
   .get(getUsers)
-  .post(createUser);
+  .post(uploadProfileImage, createUser);
 
 router.route('/users/:id')
   .put(uploadProfileImage, updateUser)

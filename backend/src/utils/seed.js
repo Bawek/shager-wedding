@@ -59,6 +59,7 @@ const seed = async () => {
         description: 'Full day coverage with 2 professional photographers, 1 videographer, drone footage, luxury album, and digital delivery.',
         price_min: 45000,
         price_max: 75000,
+        thumbnail: 'https://images.unsplash.com/photo-1537907690979-ee8e01276184',
         images: ['https://images.unsplash.com/photo-1537907690979-ee8e01276184']
       },
       {
@@ -67,6 +68,7 @@ const seed = async () => {
         description: '3 hours studio session with 3 outfit changes, 20 high-end retouched prints, and soft copy backup.',
         price_min: 15000,
         price_max: 25000,
+        thumbnail: 'https://images.unsplash.com/photo-1519741497674-611481863552',
         images: ['https://images.unsplash.com/photo-1519741497674-611481863552']
       },
       {
@@ -75,6 +77,7 @@ const seed = async () => {
         description: 'Elite stage backdrop design, runway fresh flower installations, pathway lights, and table centerpiece setups for up to 500 guests.',
         price_min: 60000,
         price_max: 120000,
+        thumbnail: 'https://images.unsplash.com/photo-1519225495810-7512c696505a',
         images: ['https://images.unsplash.com/photo-1519225495810-7512c696505a']
       },
       {
@@ -83,6 +86,7 @@ const seed = async () => {
         description: 'Diverse traditional Ethiopian dishes (Injera, Wot varieties) alongside continental options, with professional serving staff.',
         price_min: 450,
         price_max: 800, // Per guest price
+        thumbnail: 'https://images.unsplash.com/photo-1555244162-803834f70033',
         images: ['https://images.unsplash.com/photo-1555244162-803834f70033']
       },
       {
@@ -91,6 +95,7 @@ const seed = async () => {
         description: 'Custom-designed 5-tier wedding cake with edible sugar flowers, fondant decorations, and flavored tiers.',
         price_min: 12000,
         price_max: 20000,
+        thumbnail: 'https://images.unsplash.com/photo-1535254973040-607b474cb50d',
         images: ['https://images.unsplash.com/photo-1535254973040-607b474cb50d']
       },
       {
@@ -99,6 +104,7 @@ const seed = async () => {
         description: 'High-fidelity audio setup with 4 line-array speakers, wireless mics, moving head lights, smoke machines, and a professional DJ.',
         price_min: 18000,
         price_max: 30000,
+        thumbnail: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745',
         images: ['https://images.unsplash.com/photo-1470225620780-dba8ba36b745']
       },
       {
@@ -107,6 +113,7 @@ const seed = async () => {
         description: 'Stunning outdoor garden venue coupled with an elegant indoor banquet hall suitable for up to 600 guests. Ample parking included.',
         price_min: 80000,
         price_max: 150000,
+        thumbnail: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3',
         images: ['https://images.unsplash.com/photo-1519167758481-83f550bb49b3']
       },
       {
@@ -115,6 +122,7 @@ const seed = async () => {
         description: 'Premium airbrush bridal makeup, hair styling, trial run session, and bridesmaid makeup touch-ups.',
         price_min: 8000,
         price_max: 15000,
+        thumbnail: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f',
         images: ['https://images.unsplash.com/photo-1487412720507-e7ab37603c6f']
       }
     ];

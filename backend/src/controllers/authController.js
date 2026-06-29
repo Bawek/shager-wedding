@@ -161,6 +161,35 @@ exports.resetPasswordLink = async (req, res) => {
   }
 };
 
+// @desc    Confirm password reset using simulated token
+// @route   POST /api/auth/reset-password/confirm
+// @access  Public
+exports.resetPasswordConfirm = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Invalid token or password is too short' });
+    }
+
+    if (!token.startsWith('mocktoken_')) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
+    }
+
+    const userId = token.replace('mocktoken_', '');
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found for this token' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'Password has been reset successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Update customer profile
 // @route   PUT /api/auth/profile
 // @access  Private (Customer)

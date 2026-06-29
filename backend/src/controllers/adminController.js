@@ -24,13 +24,25 @@ exports.createUser = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
-    const user = await User.create({
+    const userData = {
       name,
       email,
       password,
       phone,
       role: role || 'customer'
-    });
+    };
+
+    if (req.file) {
+      try {
+        const uploaded = await uploadToCloudinary(req.file, 'profiles');
+        userData.profile = { image: uploaded.url };
+      } catch (uploadError) {
+        console.error('Error uploading profile image:', uploadError);
+        return res.status(500).json({ success: false, message: 'Error uploading profile image' });
+      }
+    }
+
+    const user = await User.create(userData);
 
     await logAudit(req.user.id, `Created user account for ${email} (${role})`, 'User', user._id);
 

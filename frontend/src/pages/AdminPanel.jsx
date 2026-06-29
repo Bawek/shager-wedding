@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 
 const TABS = ['Analytics', 'Users', 'Catalog', 'Settings', 'Audit Logs'];
+
+// File validation constants
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_PROFILE_SIZE = 2 * 1024 * 1024; // 2MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export default function AdminPanel() {
   const { user } = useAuth();
@@ -18,6 +23,11 @@ export default function AdminPanel() {
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '', phone: '', role: 'customer' });
   const [userProfileImage, setUserProfileImage] = useState(null);
+  const [userProfilePreview, setUserProfilePreview] = useState(null);
+  const [resetPasswordUser, setResetPasswordUser] = useState(null);
+  const [resetPasswordValue, setResetPasswordValue] = useState('');
+  const [resetInProgress, setResetInProgress] = useState(false);
+  const userFileInputRef = useRef(null);
 
   // ---- Catalog ----
   const [categories, setCategories] = useState([]);
@@ -28,7 +38,13 @@ export default function AdminPanel() {
   const [newCategory, setNewCategory] = useState({ name: '', icon: 'stars', sortOrder: 0 });
   const [editingService, setEditingService] = useState(null);
   const [serviceThumbnail, setServiceThumbnail] = useState(null);
+  const [serviceThumbnailPreview, setServiceThumbnailPreview] = useState(null);
   const [serviceImages, setServiceImages] = useState([]);
+  const [serviceImagePreviews, setServiceImagePreviews] = useState([]);
+  const serviceThumbFileInputRef = useRef(null);
+  const serviceImagesFileInputRef = useRef(null);
+  const editServiceThumbFileInputRef = useRef(null);
+  const editServiceImagesFileInputRef = useRef(null);
 
   // ---- Settings ----
   const [settings, setSettings] = useState(null);
@@ -38,6 +54,31 @@ export default function AdminPanel() {
   const [auditLogs, setAuditLogs] = useState([]);
 
   const [submitting, setSubmitting] = useState(false);
+
+  // File validation helper
+  const validateFile = (file, maxSize) => {
+    if (!file) return null;
+    
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      addToast(`Invalid file type. Only JPEG, PNG, and WebP allowed`, 'error');
+      return null;
+    }
+    
+    if (file.size > maxSize) {
+      const maxMB = maxSize / (1024 * 1024);
+      addToast(`File size exceeds ${maxMB}MB limit`, 'error');
+      return null;
+    }
+    
+    return file;
+  };
+
+  // Cleanup object URLs
+  const cleanupPreview = (preview) => {
+    if (preview && typeof preview === 'string' && preview.startsWith('blob:')) {
+      URL.revokeObjectURL(preview);
+    }
+  };
 
   useEffect(() => {
     if (activeTab === 'Analytics') fetchAnalytics();
@@ -88,6 +129,21 @@ export default function AdminPanel() {
     if (data.success) setAuditLogs(data.logs);
   };
 
+  const handleUserProfileImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validated = validateFile(file, MAX_PROFILE_SIZE);
+    if (!validated) {
+      e.target.value = '';
+      return;
+    }
+
+    cleanupPreview(userProfilePreview);
+    setUserProfileImage(validated);
+    setUserProfilePreview(URL.createObjectURL(validated));
+  };
+
   const handleCreateUser = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -112,7 +168,10 @@ export default function AdminPanel() {
         addToast(`Account created for ${newUser.email}`, 'success');
         setShowCreateUser(false);
         setNewUser({ name: '', email: '', password: '', phone: '', role: 'customer' });
+        cleanupPreview(userProfilePreview);
         setUserProfileImage(null);
+        setUserProfilePreview(null);
+        if (userFileInputRef.current) userFileInputRef.current.value = '';
         fetchUsers();
       } else { addToast(data.message || 'Failed to create user', 'error'); }
     } catch (err) { addToast('Error creating user', 'error'); }
@@ -136,6 +195,75 @@ export default function AdminPanel() {
       const res = await fetch(`/api/admin/users/${uid}`, { method: 'DELETE' });
       if (res.ok) { addToast(`Account ${email} deleted`, 'info'); fetchUsers(); }
     } catch (err) { addToast('Error deleting user', 'error'); }
+  };
+
+  const handleResetUserPassword = async (userToReset) => {
+    if (!resetPasswordValue || resetPasswordValue.length < 6) {
+      addToast('Please enter a new password with at least 6 characters', 'error');
+      return;
+    }
+
+    setResetInProgress(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userToReset._id}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword: resetPasswordValue })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        addToast(`Password reset for ${userToReset.email}`, 'success');
+        setResetPasswordUser(null);
+        setResetPasswordValue('');
+      } else {
+        addToast(data.message || 'Failed to reset password', 'error');
+      }
+    } catch (err) {
+      addToast('Error resetting password', 'error');
+    } finally {
+      setResetInProgress(false);
+    }
+  };
+
+  const handleServiceThumbnailChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validated = validateFile(file, MAX_FILE_SIZE);
+    if (!validated) {
+      e.target.value = '';
+      return;
+    }
+
+    cleanupPreview(serviceThumbnailPreview);
+    setServiceThumbnail(validated);
+    setServiceThumbnailPreview(URL.createObjectURL(validated));
+  };
+
+  const handleServiceImagesChange = (e) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    
+    if (files.length > 10) {
+      addToast('Maximum 10 images allowed', 'error');
+      e.target.value = '';
+      return;
+    }
+
+    const validatedFiles = files.filter(file => {
+      const validated = validateFile(file, MAX_FILE_SIZE);
+      return validated !== null;
+    });
+
+    if (validatedFiles.length === 0) {
+      e.target.value = '';
+      return;
+    }
+
+    // Cleanup old previews
+    serviceImagePreviews.forEach(cleanupPreview);
+
+    setServiceImages(validatedFiles);
+    setServiceImagePreviews(validatedFiles.map(file => URL.createObjectURL(file)));
   };
 
   const handleCreateService = async (e) => {
@@ -166,8 +294,14 @@ export default function AdminPanel() {
         addToast('Service created', 'success');
         setShowCreateService(false);
         setNewService({ name: '', categoryId: '', description: '', priceMin: '', priceMax: '' });
+        cleanupPreview(serviceThumbnailPreview);
         setServiceThumbnail(null);
+        setServiceThumbnailPreview(null);
+        serviceImagePreviews.forEach(cleanupPreview);
         setServiceImages([]);
+        setServiceImagePreviews([]);
+        if (serviceThumbFileInputRef.current) serviceThumbFileInputRef.current.value = '';
+        if (serviceImagesFileInputRef.current) serviceImagesFileInputRef.current.value = '';
         fetchServices();
       } else { addToast(data.message || 'Failed', 'error'); }
     } catch (err) { addToast('Error creating service', 'error'); }
@@ -200,9 +334,15 @@ export default function AdminPanel() {
       });
       if (res.ok) { 
         addToast('Service updated', 'success'); 
-        setEditingService(null); 
+        setEditingService(null);
+        cleanupPreview(serviceThumbnailPreview);
         setServiceThumbnail(null);
+        setServiceThumbnailPreview(null);
+        serviceImagePreviews.forEach(cleanupPreview);
         setServiceImages([]);
+        setServiceImagePreviews([]);
+        if (editServiceThumbFileInputRef.current) editServiceThumbFileInputRef.current.value = '';
+        if (editServiceImagesFileInputRef.current) editServiceImagesFileInputRef.current.value = '';
         fetchServices(); 
       }
     } catch (err) { addToast('Error updating service', 'error'); }
@@ -344,9 +484,20 @@ export default function AdminPanel() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {users.map((u) => (
               <div key={u._id} className="glass-panel" style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <strong style={{ fontSize: '1rem', color: 'var(--text-primary)', display: 'block' }}>{u.name}</strong>
-                  <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{u.email} — {u.phone}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div style={{ width: '52px', height: '52px', borderRadius: '50%', overflow: 'hidden', background: 'rgba(255,255,255,0.04)' }}>
+                    {u.profile?.image ? (
+                      <img src={u.profile.image} alt={`${u.name} avatar`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        No Image
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: '1rem', color: 'var(--text-primary)', display: 'block' }}>{u.name}</strong>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{u.email} — {u.phone}</span>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <span className={`badge badge-${u.role}`} style={{
@@ -362,6 +513,10 @@ export default function AdminPanel() {
                       <button onClick={() => handleToggleUserStatus(u._id, u.status)} className="btn btn-secondary"
                         style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
                         {u.status === 'active' ? 'Deactivate' : 'Activate'}
+                      </button>
+                      <button onClick={() => setResetPasswordUser(u)} className="btn btn-warning"
+                        style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
+                        Reset Password
                       </button>
                       <button onClick={() => handleDeleteUser(u._id, u.email)} className="btn btn-danger"
                         style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
@@ -402,16 +557,59 @@ export default function AdminPanel() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Profile Image</label>
-                    <input type="file" className="form-control" accept="image/*" onChange={(e) => setUserProfileImage(e.target.files[0])} />
-                    {userProfileImage && (
-                      <img src={URL.createObjectURL(userProfileImage)} alt="Profile preview" style={{ marginTop: '10px', maxWidth: '80px', borderRadius: '50%' }} />
+                    <input 
+                      ref={userFileInputRef}
+                      type="file" 
+                      className="form-control" 
+                      accept="image/*" 
+                      onChange={handleUserProfileImageChange}
+                    />
+                    {userProfilePreview && (
+                      <img src={userProfilePreview} alt="Profile preview" style={{ marginTop: '10px', maxWidth: '80px', borderRadius: '50%' }} />
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
                     <button type="submit" className="btn btn-primary" style={{ flexGrow: 1 }} disabled={submitting}>Create Account</button>
-                    <button type="button" className="btn btn-secondary" onClick={() => { setShowCreateUser(false); setUserProfileImage(null); }}>Cancel</button>
+                    <button type="button" className="btn btn-secondary" onClick={() => { 
+                      setShowCreateUser(false); 
+                      cleanupPreview(userProfilePreview);
+                      setUserProfileImage(null);
+                      setUserProfilePreview(null);
+                      if (userFileInputRef.current) userFileInputRef.current.value = '';
+                    }}>Cancel</button>
                   </div>
                 </form>
+              </div>
+            </div>
+          )}
+
+          {resetPasswordUser && (
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '24px' }}>
+              <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', background: 'var(--bg-surface)', padding: '32px', borderRadius: 'var(--radius-md)' }}>
+                <h3 style={{ marginBottom: '16px', color: 'var(--gold-primary)' }}>Reset Password</h3>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '18px' }}>
+                  Set a new password for <strong>{resetPasswordUser.email}</strong>.
+                </p>
+                <div className="form-group">
+                  <label className="form-label">New Password</label>
+                  <input 
+                    type="password" 
+                    className="form-control" 
+                    value={resetPasswordValue}
+                    onChange={(e) => setResetPasswordValue(e.target.value)}
+                    placeholder="At least 6 characters"
+                    disabled={resetInProgress}
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => {
+                    setResetPasswordUser(null);
+                    setResetPasswordValue('');
+                  }} disabled={resetInProgress}>Cancel</button>
+                  <button type="button" className="btn btn-primary" onClick={() => handleResetUserPassword(resetPasswordUser)} disabled={resetInProgress}>
+                    {resetInProgress ? 'Resetting...' : 'Reset Password'}
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -482,25 +680,48 @@ export default function AdminPanel() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Thumbnail Image</label>
-                    <input type="file" className="form-control" accept="image/*" onChange={(e) => setServiceThumbnail(e.target.files[0])} />
-                    {serviceThumbnail && (
-                      <img src={URL.createObjectURL(serviceThumbnail)} alt="Thumbnail preview" style={{ marginTop: '10px', maxWidth: '100px', borderRadius: '8px' }} />
+                    <input 
+                      ref={serviceThumbFileInputRef}
+                      type="file" 
+                      className="form-control" 
+                      accept="image/*" 
+                      onChange={handleServiceThumbnailChange}
+                    />
+                    {serviceThumbnailPreview && (
+                      <img src={serviceThumbnailPreview} alt="Thumbnail preview" style={{ marginTop: '10px', maxWidth: '100px', borderRadius: '8px' }} />
                     )}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Additional Images (up to 10)</label>
-                    <input type="file" className="form-control" accept="image/*" multiple onChange={(e) => setServiceImages(Array.from(e.target.files))} />
-                    {serviceImages.length > 0 && (
+                    <input 
+                      ref={serviceImagesFileInputRef}
+                      type="file" 
+                      className="form-control" 
+                      accept="image/*" 
+                      multiple 
+                      onChange={handleServiceImagesChange}
+                    />
+                    {serviceImagePreviews.length > 0 && (
                       <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
-                        {serviceImages.map((img, idx) => (
-                          <img key={idx} src={URL.createObjectURL(img)} alt={`Preview ${idx}`} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
+                        {serviceImagePreviews.map((preview, idx) => (
+                          <img key={idx} src={preview} alt={`Preview ${idx}`} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
                         ))}
                       </div>
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
                     <button type="submit" className="btn btn-primary" style={{ flexGrow: 1 }} disabled={submitting}>Create Service</button>
-                    <button type="button" className="btn btn-secondary" onClick={() => { setShowCreateService(false); setServiceThumbnail(null); setServiceImages([]); }}>Cancel</button>
+                    <button type="button" className="btn btn-secondary" onClick={() => { 
+                      setShowCreateService(false);
+                      cleanupPreview(serviceThumbnailPreview);
+                      setServiceThumbnail(null);
+                      setServiceThumbnailPreview(null);
+                      serviceImagePreviews.forEach(cleanupPreview);
+                      setServiceImages([]);
+                      setServiceImagePreviews([]);
+                      if (serviceThumbFileInputRef.current) serviceThumbFileInputRef.current.value = '';
+                      if (serviceImagesFileInputRef.current) serviceImagesFileInputRef.current.value = '';
+                    }}>Cancel</button>
                   </div>
                 </form>
               </div>
@@ -547,25 +768,48 @@ export default function AdminPanel() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Update Thumbnail Image</label>
-                    <input type="file" className="form-control" accept="image/*" onChange={(e) => setServiceThumbnail(e.target.files[0])} />
-                    {serviceThumbnail && (
-                      <img src={URL.createObjectURL(serviceThumbnail)} alt="New thumbnail preview" style={{ marginTop: '10px', maxWidth: '100px', borderRadius: '8px' }} />
+                    <input 
+                      ref={editServiceThumbFileInputRef}
+                      type="file" 
+                      className="form-control" 
+                      accept="image/*" 
+                      onChange={handleServiceThumbnailChange}
+                    />
+                    {serviceThumbnailPreview && (
+                      <img src={serviceThumbnailPreview} alt="New thumbnail preview" style={{ marginTop: '10px', maxWidth: '100px', borderRadius: '8px' }} />
                     )}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Additional Images (up to 10)</label>
-                    <input type="file" className="form-control" accept="image/*" multiple onChange={(e) => setServiceImages(Array.from(e.target.files))} />
-                    {serviceImages.length > 0 && (
+                    <input 
+                      ref={editServiceImagesFileInputRef}
+                      type="file" 
+                      className="form-control" 
+                      accept="image/*" 
+                      multiple 
+                      onChange={handleServiceImagesChange}
+                    />
+                    {serviceImagePreviews.length > 0 && (
                       <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
-                        {serviceImages.map((img, idx) => (
-                          <img key={idx} src={URL.createObjectURL(img)} alt={`Preview ${idx}`} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
+                        {serviceImagePreviews.map((preview, idx) => (
+                          <img key={idx} src={preview} alt={`Preview ${idx}`} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
                         ))}
                       </div>
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
                     <button type="submit" className="btn btn-primary" style={{ flexGrow: 1 }} disabled={submitting}>Save Changes</button>
-                    <button type="button" className="btn btn-secondary" onClick={() => { setEditingService(null); setServiceThumbnail(null); setServiceImages([]); }}>Cancel</button>
+                    <button type="button" className="btn btn-secondary" onClick={() => { 
+                      setEditingService(null);
+                      cleanupPreview(serviceThumbnailPreview);
+                      setServiceThumbnail(null);
+                      setServiceThumbnailPreview(null);
+                      serviceImagePreviews.forEach(cleanupPreview);
+                      setServiceImages([]);
+                      setServiceImagePreviews([]);
+                      if (editServiceThumbFileInputRef.current) editServiceThumbFileInputRef.current.value = '';
+                      if (editServiceImagesFileInputRef.current) editServiceImagesFileInputRef.current.value = '';
+                    }}>Cancel</button>
                   </div>
                 </form>
               </div>

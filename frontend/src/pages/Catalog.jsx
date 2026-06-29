@@ -220,9 +220,9 @@ export default function Catalog({ onCartChange }) {
                   style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}
                 >
                   <div style={{ height: '180px', background: '#222', position: 'relative' }}>
-                    {service.images && service.images[0] ? (
+                    {(service.thumbnail || (service.images && service.images[0])) ? (
                       <img
-                        src={service.images[0]}
+                        src={service.thumbnail || service.images[0]}
                         alt={service.name}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
@@ -338,10 +338,10 @@ export default function Catalog({ onCartChange }) {
             </button>
 
             {/* Modal Image Header */}
-            {selectedService.images && selectedService.images[0] && (
+            {(selectedService.thumbnail || (selectedService.images && selectedService.images[0])) && (
               <div style={{ height: '240px', overflow: 'hidden' }}>
                 <img
-                  src={selectedService.images[0]}
+                  src={selectedService.thumbnail || selectedService.images[0]}
                   alt={selectedService.name}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />

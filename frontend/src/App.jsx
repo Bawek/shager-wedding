@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import Catalog from './pages/Catalog';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ResetPassword from './pages/ResetPassword';
 import CartPage from './pages/CartPage';
 import CustomerDashboard from './pages/CustomerDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
@@ -45,6 +46,7 @@ function AppContent() {
         <Route path="/" element={<Catalog onCartChange={refreshCartCount} />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route path="/cart" element={
           <ProtectedRoute allowedRoles={['customer']}>
