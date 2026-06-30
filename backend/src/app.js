@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
+const path = require('path');
 const connectDB = require('./config/db');
 
 // Load environment variables
@@ -16,8 +17,23 @@ connectDB();
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
+
+// Configure CORS
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173'];
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173', 'https://shager-wedding.onrender.com'],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like curl, Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
@@ -41,6 +57,16 @@ app.use('/api/notifications', notifications);
 app.get('/api/health', (req, res) => {
   res.status(200).json({ success: true, message: 'Shager Wedding API is healthy' });
 });
+
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  // Set static folder
+  app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../../frontend/dist/index.html'));
+  });
+}
 
 // Centralized error handler middleware
 app.use((err, req, res, next) => {

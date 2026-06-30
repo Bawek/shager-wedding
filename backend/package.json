@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "seed": "node src/utils/seed.js"
+    "seed": "node src/utils/seed.js",
+    "build": "cd ../frontend && npm install && npm run build",
+    "render-postbuild": "cd ../frontend && npm install && npm run build"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
