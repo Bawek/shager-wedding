@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 
-const TABS = ['Analytics', 'Users', 'Catalog', 'Settings', 'Audit Logs'];
+const TABS = ['Analytics', 'Users', 'Catalog', 'Settings', 'Audit Logs', 'Profile'];
 
 // File validation constants
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -10,8 +10,37 @@ const MAX_PROFILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export default function AdminPanel() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const { addToast } = useNotifications();
+
+  // Profile fields
+  const [profileName, setProfileName] = useState(user?.name || '');
+  const [profileEmail, setProfileEmail] = useState(user?.email || '');
+  const [profilePhone, setProfilePhone] = useState(user?.phone || '');
+  const [profileImage, setProfileImage] = useState(null);
+  const [updatingProfile, setUpdatingProfile] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setProfileName(user.name || '');
+      setProfileEmail(user.email || '');
+      setProfilePhone(user.phone || '');
+    }
+  }, [user]);
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setUpdatingProfile(true);
+    try {
+      await updateProfile({ name: profileName, email: profileEmail, phone: profilePhone }, profileImage);
+      addToast('Profile updated successfully!', 'success');
+      setProfileImage(null);
+    } catch (err) {
+      addToast(err.message || 'Failed to update profile', 'error');
+    } finally {
+      setUpdatingProfile(false);
+    }
+  };
   const [activeTab, setActiveTab] = useState('Analytics');
 
   // ---- Analytics ----
@@ -906,6 +935,78 @@ export default function AdminPanel() {
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ===== PROFILE TAB ===== */}
+      {activeTab === 'Profile' && (
+        <div className="animate-fade-in" style={{ maxWidth: '500px' }}>
+          <div className="glass-panel" style={{ padding: '28px' }}>
+            <h3 style={{ color: 'var(--gold-primary)', marginBottom: '20px', fontSize: '1.1rem' }}>My Profile</h3>
+            <form onSubmit={handleProfileUpdate}>
+              <div className="form-group">
+                <label className="form-label">Full Name</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                  disabled={updatingProfile}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input 
+                  type="email" 
+                  className="form-control" 
+                  value={profileEmail}
+                  onChange={(e) => setProfileEmail(e.target.value)}
+                  disabled={updatingProfile}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Contact Phone</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={profilePhone}
+                  onChange={(e) => setProfilePhone(e.target.value)}
+                  disabled={updatingProfile}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Profile Image</label>
+                <input 
+                  type="file" 
+                  className="form-control" 
+                  accept="image/*"
+                  onChange={(e) => setProfileImage(e.target.files?.[0])}
+                  disabled={updatingProfile}
+                />
+                {user?.profile?.image && !profileImage && (
+                  <img 
+                    src={user.profile.image} 
+                    alt="Current profile" 
+                    style={{ marginTop: '10px', maxWidth: '80px', borderRadius: '50%' }} 
+                  />
+                )}
+                {profileImage && (
+                  <img 
+                    src={URL.createObjectURL(profileImage)} 
+                    alt="New profile preview" 
+                    style={{ marginTop: '10px', maxWidth: '80px', borderRadius: '50%' }} 
+                  />
+                )}
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '12px' }} disabled={updatingProfile}>
+                {updatingProfile ? 'Updating...' : 'Save Profile'}
+              </button>
+            </form>
           </div>
         </div>
       )}

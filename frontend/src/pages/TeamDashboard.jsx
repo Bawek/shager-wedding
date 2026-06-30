@@ -3,8 +3,37 @@ import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 
 export default function TeamDashboard() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const { addToast } = useNotifications();
+
+  // Profile fields
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [profileImage, setProfileImage] = useState(null);
+  const [updating, setUpdating] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setEmail(user.email || '');
+      setPhone(user.phone || '');
+    }
+  }, [user]);
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setUpdating(true);
+    try {
+      await updateProfile({ name, email, phone }, profileImage);
+      addToast('Profile updated successfully!', 'success');
+      setProfileImage(null);
+    } catch (err) {
+      addToast(err.message || 'Failed to update profile', 'error');
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -152,58 +181,131 @@ export default function TeamDashboard() {
         Manage your assigned wedding service tasks, log progress, and upload deliverables
       </p>
 
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>Loading assigned tasks...</p>
-        </div>
-      ) : tasks.length === 0 ? (
-        <div className="glass-panel" style={{ padding: '48px', textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>No tasks assigned to you yet.</p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {tasks.map((task) => {
-            const daysLeft = getDaysLeft(task.deadline);
-            return (
-              <div
-                key={task.assignmentId}
-                className="glass-panel glass-panel-hover"
-                style={{ padding: '24px', cursor: 'pointer' }}
-                onClick={() => { setSelectedTask(task); setShowEscalate(false); setProgressNote(''); }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flexGrow: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                      <strong style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>{task.serviceName}</strong>
-                      <span className={`badge badge-${task.status.toLowerCase()}`}>{task.status}</span>
+      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '32px', alignItems: 'start' }}>
+        {/* Profile Sidebar */}
+        <aside className="glass-panel" style={{ padding: '28px' }}>
+          <h3 style={{ fontSize: '1.25rem', color: 'var(--gold-primary)', marginBottom: '20px' }}>My Profile</h3>
+          <form onSubmit={handleProfileUpdate}>
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={updating}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Email</label>
+              <input 
+                type="email" 
+                className="form-control" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={updating}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Contact Phone</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                disabled={updating}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Profile Image</label>
+              <input 
+                type="file" 
+                className="form-control" 
+                accept="image/*"
+                onChange={(e) => setProfileImage(e.target.files[0])}
+                disabled={updating}
+              />
+              {user?.profile?.image && !profileImage && (
+                <img 
+                  src={user.profile.image} 
+                  alt="Current profile" 
+                  style={{ marginTop: '10px', maxWidth: '80px', borderRadius: '50%' }} 
+                />
+              )}
+              {profileImage && (
+                <img 
+                  src={URL.createObjectURL(profileImage)} 
+                  alt="New profile preview" 
+                  style={{ marginTop: '10px', maxWidth: '80px', borderRadius: '50%' }} 
+                />
+              )}
+            </div>
+
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '12px' }} disabled={updating}>
+              {updating ? 'Updating...' : 'Save Profile'}
+            </button>
+          </form>
+        </aside>
+
+        {/* Main Content */}
+        <section>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '60px' }}>
+              <p style={{ color: 'var(--text-secondary)' }}>Loading assigned tasks...</p>
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="glass-panel" style={{ padding: '48px', textAlign: 'center' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>No tasks assigned to you yet.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {tasks.map((task) => {
+                const daysLeft = getDaysLeft(task.deadline);
+                return (
+                  <div
+                    key={task.assignmentId}
+                    className="glass-panel glass-panel-hover"
+                    style={{ padding: '24px', cursor: 'pointer' }}
+                    onClick={() => { setSelectedTask(task); setShowEscalate(false); setProgressNote(''); }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flexGrow: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                          <strong style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>{task.serviceName}</strong>
+                          <span className={`badge badge-${task.status.toLowerCase()}`}>{task.status}</span>
+                        </div>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                          Request: <strong>{task.referenceNo}</strong> — Customer: <strong>{task.customerName}</strong>
+                        </p>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                          Event: <strong>{new Date(task.eventDate).toLocaleDateString()}</strong> at <strong>{task.venue}</strong>
+                        </p>
+                        {task.managerNotes && (
+                          <p style={{ fontSize: '0.8rem', color: 'var(--gold-light)', marginTop: '6px', fontStyle: 'italic' }}>
+                            Manager notes: "{task.managerNotes}"
+                          </p>
+                        )}
+                      </div>
+                      <div style={{ textAlign: 'right', minWidth: '110px' }}>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>Deadline</span>
+                        <strong style={{ color: getUrgencyColor(daysLeft), fontSize: '0.9rem' }}>
+                          {new Date(task.deadline).toLocaleDateString()}
+                        </strong>
+                        <span style={{ fontSize: '0.72rem', color: getUrgencyColor(daysLeft), display: 'block' }}>
+                          {daysLeft > 0 ? `${daysLeft} day(s) left` : 'OVERDUE'}
+                        </span>
+                      </div>
                     </div>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                      Request: <strong>{task.referenceNo}</strong> — Customer: <strong>{task.customerName}</strong>
-                    </p>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                      Event: <strong>{new Date(task.eventDate).toLocaleDateString()}</strong> at <strong>{task.venue}</strong>
-                    </p>
-                    {task.managerNotes && (
-                      <p style={{ fontSize: '0.8rem', color: 'var(--gold-light)', marginTop: '6px', fontStyle: 'italic' }}>
-                        Manager notes: "{task.managerNotes}"
-                      </p>
-                    )}
                   </div>
-                  <div style={{ textAlign: 'right', minWidth: '110px' }}>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block' }}>Deadline</span>
-                    <strong style={{ color: getUrgencyColor(daysLeft), fontSize: '0.9rem' }}>
-                      {new Date(task.deadline).toLocaleDateString()}
-                    </strong>
-                    <span style={{ fontSize: '0.72rem', color: getUrgencyColor(daysLeft), display: 'block' }}>
-                      {daysLeft > 0 ? `${daysLeft} day(s) left` : 'OVERDUE'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </div>
 
       {/* Task Detail Overlay */}
       {selectedTask && (

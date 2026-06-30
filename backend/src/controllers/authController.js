@@ -190,21 +190,35 @@ exports.resetPasswordConfirm = async (req, res) => {
   }
 };
 
-// @desc    Update customer profile
+// @desc    Update user profile
 // @route   PUT /api/auth/profile
-// @access  Private (Customer)
+// @access  Private
 exports.updateProfile = async (req, res) => {
   try {
-    const { phone, weddingDate, venue } = req.body;
+    const { name, email, phone, weddingDate, venue } = req.body;
     
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    user.phone = phone || user.phone;
-    if (weddingDate) user.profile.weddingDate = new Date(weddingDate);
-    if (venue !== undefined) user.profile.venue = venue;
+    // Update basic fields for all users
+    if (name) user.name = name;
+    if (email) {
+      // Check if email is already taken by another user
+      const existingUser = await User.findOne({ email });
+      if (existingUser && existingUser._id.toString() !== req.user.id) {
+        return res.status(400).json({ success: false, message: 'Email already taken' });
+      }
+      user.email = email;
+    }
+    if (phone) user.phone = phone;
+
+    // Update customer-specific profile fields if user is a customer
+    if (user.role === 'customer') {
+      if (weddingDate) user.profile.weddingDate = new Date(weddingDate);
+      if (venue !== undefined) user.profile.venue = venue;
+    }
 
     // Handle profile image upload
     if (req.file) {

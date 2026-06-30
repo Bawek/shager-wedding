@@ -10,6 +10,8 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
 
   // Profile fields
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [weddingDate, setWeddingDate] = useState('');
   const [venue, setVenue] = useState(user?.profile?.venue || '');
@@ -22,6 +24,8 @@ export default function CustomerDashboard() {
 
   useEffect(() => {
     if (user) {
+      setName(user.name || '');
+      setEmail(user.email || '');
       setPhone(user.phone || '');
       setVenue(user.profile?.venue || '');
       if (user.profile?.weddingDate) {
@@ -50,8 +54,8 @@ export default function CustomerDashboard() {
     e.preventDefault();
     setUpdating(true);
     try {
-      await updateProfile({ phone, weddingDate, venue }, profileImage);
-      addToast('Wedding profile details updated!', 'success');
+      await updateProfile({ name, email, phone, weddingDate, venue }, profileImage);
+      addToast('Profile updated successfully!', 'success');
       setProfileImage(null);
     } catch (err) {
       addToast(err.message || 'Failed to update profile', 'error');
@@ -101,6 +105,28 @@ export default function CustomerDashboard() {
         <aside className="glass-panel" style={{ padding: '28px' }}>
           <h3 style={{ fontSize: '1.25rem', color: 'var(--gold-primary)', marginBottom: '20px' }}>Wedding Coordinates</h3>
           <form onSubmit={handleProfileUpdate}>
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={updating}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Email</label>
+              <input 
+                type="email" 
+                className="form-control" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={updating}
+              />
+            </div>
+
             <div className="form-group">
               <label className="form-label">Contact Phone</label>
               <input 
