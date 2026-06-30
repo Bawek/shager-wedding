@@ -20,7 +20,7 @@ app.use(cookieParser());
 
 // Configure CORS
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',') 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim().replace(/\/$/, '')) // Trim and remove trailing slash
   : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173'];
 
 app.use(cors({
@@ -28,7 +28,10 @@ app.use(cors({
     // Allow requests with no origin (like curl, Postman)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Normalize origin by removing trailing slash
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    
+    if (allowedOrigins.includes(normalizedOrigin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
