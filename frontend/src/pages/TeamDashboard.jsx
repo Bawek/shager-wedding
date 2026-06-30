@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
+import { getApiUrl } from '../utils/api';
 
 export default function TeamDashboard() {
   const { user, updateProfile } = useAuth();
@@ -52,7 +53,7 @@ export default function TeamDashboard() {
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/requests/my-tasks');
+      const res = await fetch(getApiUrl('/api/requests/my-tasks'));
       const data = await res.json();
       if (data.success) setTasks(data.tasks);
     } catch (err) {
@@ -65,7 +66,7 @@ export default function TeamDashboard() {
   const updateStatus = async (requestId, assignId, status) => {
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/requests/${requestId}/tasks/${assignId}/status`, {
+      const res = await fetch(getApiUrl(`/api/requests/${requestId}/tasks/${assignId}/status`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -90,7 +91,7 @@ export default function TeamDashboard() {
     if (!progressNote || !selectedTask) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/requests/${selectedTask.requestId}/tasks/${selectedTask.assignmentId}/notes`, {
+      const res = await fetch(getApiUrl(`/api/requests/${selectedTask.requestId}/tasks/${selectedTask.assignmentId}/notes`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ note: progressNote })
@@ -115,7 +116,7 @@ export default function TeamDashboard() {
     if (!deliverableFilename || !deliverableUrl || !selectedTask) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/requests/${selectedTask.requestId}/tasks/${selectedTask.assignmentId}/deliverables`, {
+      const res = await fetch(getApiUrl(`/api/requests/${selectedTask.requestId}/tasks/${selectedTask.assignmentId}/deliverables`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename: deliverableFilename, url: deliverableUrl })
@@ -141,7 +142,7 @@ export default function TeamDashboard() {
     if (!escalateReason || !selectedTask) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/requests/${selectedTask.requestId}/tasks/${selectedTask.assignmentId}/escalate`, {
+      const res = await fetch(getApiUrl(`/api/requests/${selectedTask.requestId}/tasks/${selectedTask.assignmentId}/escalate`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: escalateReason })

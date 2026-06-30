@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { getApiUrl } from '../utils/api';
 
 export default function ManagerDashboard() {
   const { user, updateProfile } = useAuth();
@@ -60,7 +61,7 @@ export default function ManagerDashboard() {
   const fetchInbox = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/requests/inbox');
+      const res = await fetch(getApiUrl('/api/requests/inbox'));
       const data = await res.json();
       if (data.success) {
         setInbox(data.requests);
@@ -74,7 +75,7 @@ export default function ManagerDashboard() {
 
   const fetchWorkloads = async () => {
     try {
-      const res = await fetch('/api/requests/team-workload');
+      const res = await fetch(getApiUrl('/api/requests/team-workload'));
       const data = await res.json();
       if (data.success) {
         setWorkloads(data.workloads);
@@ -86,7 +87,7 @@ export default function ManagerDashboard() {
 
   const refreshDetails = async (id) => {
     try {
-      const res = await fetch(`/api/requests/${id}`);
+      const res = await fetch(getApiUrl(`/api/requests/${id}`));
       const data = await res.json();
       if (data.success) {
         setSelectedRequest(data.request);
@@ -102,7 +103,7 @@ export default function ManagerDashboard() {
 
     setSubmittingAction(true);
     try {
-      const res = await fetch(`/api/requests/${selectedRequest._id}/notes`, {
+      const res = await fetch(getApiUrl(`/api/requests/${selectedRequest._id}/notes`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ note: internalNote })
@@ -129,7 +130,7 @@ export default function ManagerDashboard() {
 
     setSubmittingAction(true);
     try {
-      const res = await fetch(`/api/requests/${selectedRequest._id}/reject`, {
+      const res = await fetch(getApiUrl(`/api/requests/${selectedRequest._id}/reject`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: rejectReason })
@@ -157,7 +158,7 @@ export default function ManagerDashboard() {
 
     setSubmittingAction(true);
     try {
-      const res = await fetch(`/api/requests/${selectedRequest._id}/assign`, {
+      const res = await fetch(getApiUrl(`/api/requests/${selectedRequest._id}/assign`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -190,7 +191,7 @@ export default function ManagerDashboard() {
   const handleCompleteRequest = async () => {
     if (!window.confirm('Mark this entire service request as COMPLETED?')) return;
     try {
-      const res = await fetch(`/api/requests/${selectedRequest._id}/complete`, { method: 'PUT' });
+      const res = await fetch(getApiUrl(`/api/requests/${selectedRequest._id}/complete`), { method: 'PUT' });
       if (res.ok) {
         addToast('Service request marked as COMPLETED', 'success');
         setSelectedRequest(null);

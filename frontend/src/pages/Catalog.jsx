@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
+import { getApiUrl } from '../utils/api';
 
 export default function Catalog({ onCartChange }) {
   const { user } = useAuth();
@@ -28,7 +29,7 @@ export default function Catalog({ onCartChange }) {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('/api/services/categories');
+      const res = await fetch(getApiUrl('/api/services/categories'));
       const data = await res.json();
       if (data.success) {
         setCategories(data.categories);
@@ -41,7 +42,7 @@ export default function Catalog({ onCartChange }) {
   const fetchServices = async (cat = '', search = '', min = '', max = '') => {
     setLoading(true);
     try {
-      let url = `/api/services?category=${cat}&search=${search}&minPrice=${min}&maxPrice=${max}`;
+      let url = getApiUrl(`/api/services?category=${cat}&search=${search}&minPrice=${min}&maxPrice=${max}`);
       const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
@@ -67,7 +68,7 @@ export default function Catalog({ onCartChange }) {
 
   const openServiceModal = async (id) => {
     try {
-      const res = await fetch(`/api/services/${id}`);
+      const res = await fetch(getApiUrl(`/api/services/${id}`));
       const data = await res.json();
       if (data.success) {
         setSelectedService(data.service);
@@ -90,7 +91,7 @@ export default function Catalog({ onCartChange }) {
 
     setAddingToCart(true);
     try {
-      const res = await fetch('/api/cart', {
+      const res = await fetch(getApiUrl('/api/cart'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

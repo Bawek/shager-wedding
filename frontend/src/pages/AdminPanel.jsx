@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { getApiUrl } from '../utils/api';
 
 const TABS = ['Analytics', 'Users', 'Catalog', 'Settings', 'Audit Logs', 'Profile'];
 
@@ -119,7 +120,7 @@ export default function AdminPanel() {
 
   const fetchAnalytics = async () => {
     try {
-      const res = await fetch('/api/admin/analytics');
+      const res = await fetch(getApiUrl('/api/admin/analytics'));
       const data = await res.json();
       if (data.success) setAnalytics(data.data);
     } catch (err) { console.error(err); }
@@ -127,7 +128,7 @@ export default function AdminPanel() {
 
   const fetchUsers = async () => {
     try {
-      const url = userFilter ? `/api/admin/users?role=${userFilter}` : '/api/admin/users';
+      const url = userFilter ? getApiUrl(`/api/admin/users?role=${userFilter}`) : getApiUrl('/api/admin/users');
       const res = await fetch(url);
       const data = await res.json();
       if (data.success) setUsers(data.users);
@@ -135,25 +136,25 @@ export default function AdminPanel() {
   };
 
   const fetchCategories = async () => {
-    const res = await fetch('/api/services/categories');
+    const res = await fetch(getApiUrl('/api/services/categories'));
     const data = await res.json();
     if (data.success) setCategories(data.categories);
   };
 
   const fetchServices = async () => {
-    const res = await fetch('/api/services?');
+    const res = await fetch(getApiUrl('/api/services?'));
     const data = await res.json();
     if (data.success) setServices(data.services);
   };
 
   const fetchSettings = async () => {
-    const res = await fetch('/api/admin/settings');
+    const res = await fetch(getApiUrl('/api/admin/settings'));
     const data = await res.json();
     if (data.success) setSettings(data.settings);
   };
 
   const fetchAuditLogs = async () => {
-    const res = await fetch('/api/admin/audit-logs');
+    const res = await fetch(getApiUrl('/api/admin/audit-logs'));
     const data = await res.json();
     if (data.success) setAuditLogs(data.logs);
   };
@@ -188,7 +189,7 @@ export default function AdminPanel() {
         formData.append('profileImage', userProfileImage);
       }
 
-      const res = await fetch('/api/admin/users', {
+      const res = await fetch(getApiUrl('/api/admin/users'), {
         method: 'POST',
         body: formData
       });
@@ -210,7 +211,7 @@ export default function AdminPanel() {
   const handleToggleUserStatus = async (uid, currentStatus) => {
     try {
       const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-      const res = await fetch(`/api/admin/users/${uid}`, {
+      const res = await fetch(getApiUrl(`/api/admin/users/${uid}`), {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
@@ -221,7 +222,7 @@ export default function AdminPanel() {
   const handleDeleteUser = async (uid, email) => {
     if (!window.confirm(`Permanently delete account ${email}?`)) return;
     try {
-      const res = await fetch(`/api/admin/users/${uid}`, { method: 'DELETE' });
+      const res = await fetch(getApiUrl(`/api/admin/users/${uid}`), { method: 'DELETE' });
       if (res.ok) { addToast(`Account ${email} deleted`, 'info'); fetchUsers(); }
     } catch (err) { addToast('Error deleting user', 'error'); }
   };
@@ -234,7 +235,7 @@ export default function AdminPanel() {
 
     setResetInProgress(true);
     try {
-      const res = await fetch(`/api/admin/users/${userToReset._id}/reset-password`, {
+      const res = await fetch(getApiUrl(`/api/admin/users/${userToReset._id}/reset-password`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newPassword: resetPasswordValue })
@@ -314,7 +315,7 @@ export default function AdminPanel() {
         serviceImages.forEach(img => formData.append('images', img));
       }
 
-      const res = await fetch('/api/admin/services', {
+      const res = await fetch(getApiUrl('/api/admin/services'), {
         method: 'POST',
         body: formData
       });
@@ -357,7 +358,7 @@ export default function AdminPanel() {
         serviceImages.forEach(img => formData.append('images', img));
       }
 
-      const res = await fetch(`/api/admin/services/${editingService._id}`, {
+      const res = await fetch(getApiUrl(`/api/admin/services/${editingService._id}`), {
         method: 'PUT',
         body: formData
       });
@@ -382,7 +383,7 @@ export default function AdminPanel() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch('/api/admin/categories', {
+      const res = await fetch(getApiUrl('/api/admin/categories'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newCategory)
       });
@@ -395,7 +396,7 @@ export default function AdminPanel() {
     e.preventDefault();
     setSavingSettings(true);
     try {
-      const res = await fetch('/api/admin/settings', {
+      const res = await fetch(getApiUrl('/api/admin/settings'), {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings)
       });
@@ -406,7 +407,7 @@ export default function AdminPanel() {
 
   const handleExportCSV = async () => {
     try {
-      const res = await fetch('/api/admin/export-csv');
+      const res = await fetch(getApiUrl('/api/admin/export-csv'));
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

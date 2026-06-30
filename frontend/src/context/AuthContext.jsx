@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { getApiUrl } from '../utils/api';
 
 const AuthContext = createContext(null);
 
@@ -24,7 +25,7 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(getApiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -50,7 +51,7 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(getApiUrl('/api/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, phone, weddingDate, venue })
@@ -74,7 +75,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout');
+      await fetch(getApiUrl('/api/auth/logout'));
     } catch (e) {
       console.error('Logout error on server:', e);
     } finally {
@@ -98,7 +99,7 @@ export const AuthProvider = ({ children }) => {
         formData.append('profileImage', profileImage);
       }
 
-      const response = await fetch('/api/auth/profile', {
+      const response = await fetch(getApiUrl('/api/auth/profile'), {
         method: 'PUT',
         body: formData
       });

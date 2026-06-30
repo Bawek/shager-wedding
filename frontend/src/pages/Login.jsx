@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
+import { getApiUrl } from '../utils/api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -47,7 +48,7 @@ export default function Login() {
       return;
     }
     try {
-      const res = await fetch('/api/auth/reset-password', {
+      const res = await fetch(getApiUrl('/api/auth/reset-password'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmail })

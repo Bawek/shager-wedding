@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { getApiUrl } from './utils/api';
 import Navbar from './components/Navbar';
 import Catalog from './pages/Catalog';
 import Login from './pages/Login';
@@ -29,7 +30,7 @@ function AppContent() {
   const refreshCartCount = async () => {
     if (!user || user.role !== 'customer') { setCartCount(0); return; }
     try {
-      const res = await fetch('/api/cart');
+      const res = await fetch(getApiUrl('/api/cart'));
       const data = await res.json();
       if (data.success && data.cart?.items) {
         setCartCount(data.cart.items.length);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { getApiUrl } from '../utils/api';
 
 export default function CartPage({ onCartChange }) {
   const { user } = useAuth();
@@ -33,7 +34,7 @@ export default function CartPage({ onCartChange }) {
   const fetchCart = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/cart');
+      const res = await fetch(getApiUrl('/api/cart'));
       const data = await res.json();
       if (data.success) {
         setCart(data.cart);
@@ -47,7 +48,7 @@ export default function CartPage({ onCartChange }) {
 
   const handleRemove = async (itemId) => {
     try {
-      const res = await fetch(`/api/cart/${itemId}`, { method: 'DELETE' });
+      const res = await fetch(getApiUrl(`/api/cart/${itemId}`), { method: 'DELETE' });
       const data = await res.json();
       if (res.ok) {
         addToast('Service removed from cart', 'info');
@@ -64,7 +65,7 @@ export default function CartPage({ onCartChange }) {
   const handleClear = async () => {
     if (!window.confirm('Are you sure you want to clear your cart?')) return;
     try {
-      const res = await fetch('/api/cart', { method: 'DELETE' });
+      const res = await fetch(getApiUrl('/api/cart'), { method: 'DELETE' });
       const data = await res.json();
       if (res.ok) {
         addToast('Cart cleared', 'info');
@@ -85,7 +86,7 @@ export default function CartPage({ onCartChange }) {
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/requests', {
+      const res = await fetch(getApiUrl('/api/requests'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

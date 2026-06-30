@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
+import { getApiUrl } from '../utils/api';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -23,9 +24,9 @@ export default function Register() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch('/api/services/categories'); // any public route, or create settings mock
+        const res = await fetch(getApiUrl('/api/services/categories')); // any public route, or create settings mock
         // Let's call /api/auth/register or mock it based on settings response
-        const settingsRes = await fetch('/api/admin/settings'); // admin setting check (usually private, let's create a public settings fetch or simple check)
+        const settingsRes = await fetch(getApiUrl('/api/admin/settings')); // admin setting check (usually private, let's create a public settings fetch or simple check)
         
         // Actually, if settings fails due to auth, we will fall back to allowing registration, or we can expose a public settings check.
         // Let's create a public settings route on the backend? Oh, we don't have a public settings controller but we can inspect it safely.

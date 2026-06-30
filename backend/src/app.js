@@ -60,12 +60,34 @@ app.get('/api/health', (req, res) => {
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+  // Try multiple possible paths for the frontend build
+  const possiblePaths = [
+    path.join(__dirname, '../../frontend/dist'),
+    path.join(__dirname, '../frontend/dist'),
+    path.join(__dirname, 'frontend/dist')
+  ];
 
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../../frontend/dist/index.html'));
-  });
+  let frontendPath = null;
+  for (const p of possiblePaths) {
+    try {
+      require('fs').accessSync(p);
+      frontendPath = p;
+      break;
+    } catch (e) {
+      // Path doesn't exist, try next one
+    }
+  }
+
+  if (frontendPath) {
+    console.log(`Serving frontend from: ${frontendPath}`);
+    app.use(express.static(frontendPath));
+
+    app.get('*', (req, res) => {
+      res.sendFile(path.resolve(frontendPath, 'index.html'));
+    });
+  } else {
+    console.warn('Frontend build folder not found! API routes will still work.');
+  }
 }
 
 // Centralized error handler middleware

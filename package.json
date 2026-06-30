@@ -1,0 +1,15 @@
+{
+  "name": "shager-wedding",
+  "version": "1.0.0",
+  "description": "Shager Wedding Platform",
+  "scripts": {
+    "dev": "cd backend && npm run dev",
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd backend && npm start",
+    "render-build": "npm install && cd frontend && npm install && npm run build",
+    "render-start": "cd backend && npm start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

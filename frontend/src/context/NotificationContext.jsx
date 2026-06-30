@@ -1,7 +1,16 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useAuth } from './AuthContext';
+import { getApiUrl } from '../utils/api';
 
 const NotificationContext = createContext(null);
+
+export const useNotifications = () => {
+  const context = useContext(NotificationContext);
+  if (!context) {
+    throw new Error('useNotifications must be used within a NotificationProvider');
+  }
+  return context;
+};
 
 export const NotificationProvider = ({ children }) => {
   const { user } = useAuth();
@@ -25,7 +34,7 @@ export const NotificationProvider = ({ children }) => {
   const fetchNotifications = async () => {
     if (!user) return;
     try {
-      const response = await fetch('/api/notifications');
+      const response = await fetch(getApiUrl('/api/notifications'));
       const data = await response.json();
       if (response.ok && data.success) {
         // Compare count to trigger toasts for new items
@@ -55,7 +64,7 @@ export const NotificationProvider = ({ children }) => {
 
   const markAsRead = async (id) => {
     try {
-      const response = await fetch(`/api/notifications/${id}/read`, { method: 'PUT' });
+      const response = await fetch(getApiUrl(`/api/notifications/${id}/read`), { method: 'PUT' });
       if (response.ok) {
         setNotifications((prev) =>
           prev.map((n) => (n._id === id ? { ...n, is_read: true } : n))
@@ -68,7 +77,7 @@ export const NotificationProvider = ({ children }) => {
 
   const markAllAsRead = async () => {
     try {
-      const response = await fetch('/api/notifications/read-all', { method: 'PUT' });
+      const response = await fetch(getApiUrl('/api/notifications/read-all'), { method: 'PUT' });
       if (response.ok) {
         setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
       }
@@ -127,4 +136,4 @@ export const NotificationProvider = ({ children }) => {
   );
 };
 
-export const useNotifications = () => useContext(NotificationContext);
+

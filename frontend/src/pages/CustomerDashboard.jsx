@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
+import { getApiUrl } from '../utils/api';
 
 export default function CustomerDashboard() {
   const { user, updateProfile } = useAuth();
@@ -38,7 +39,7 @@ export default function CustomerDashboard() {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/requests/my-requests');
+      const res = await fetch(getApiUrl('/api/requests/my-requests'));
       const data = await res.json();
       if (data.success) {
         setRequests(data.requests);
@@ -67,7 +68,7 @@ export default function CustomerDashboard() {
   const viewDetails = async (id) => {
     setLoadingDetails(true);
     try {
-      const res = await fetch(`/api/requests/${id}`);
+      const res = await fetch(getApiUrl(`/api/requests/${id}`));
       const data = await res.json();
       if (data.success) {
         setSelectedRequest(data.request);
@@ -82,7 +83,7 @@ export default function CustomerDashboard() {
   const handleCancel = async (id) => {
     if (!window.confirm('Are you sure you want to cancel this booking request?')) return;
     try {
-      const res = await fetch(`/api/requests/${id}/cancel`, { method: 'PUT' });
+      const res = await fetch(getApiUrl(`/api/requests/${id}/cancel`), { method: 'PUT' });
       const data = await res.json();
       if (res.ok) {
         addToast('Booking request cancelled successfully', 'info');
